@@ -67,14 +67,18 @@ while True:
     my_score, opponent_score = [int(i) for i in input().split()]
     map.update(input)
 
+    commands = []
     for pac in map.my_pacs:
         if (target := map.find_closest_target(pac.x, pac.y, 2)) is not None:
-            print(f"MOVE {pac.pac_id} {target[0]} {target[1]}")
+            commands.append(f"MOVE {pac.pac_id} {target[0]} {target[1]}")
         elif (target := map.find_closest_target(pac.x, pac.y, 1)) is not None:
-            print(f"MOVE {pac.pac_id} {target[0]} {target[1]}")
+            commands.append(f"MOVE {pac.pac_id} {target[0]} {target[1]}")
         else:
             print(f"Could not find target for pac_id={pac.pac_id} at ({pac.x}, {pac.y})", file=sys.stderr, flush=True)
-            print("MOVE 0 15 10")
+    if commands:
+        print(" | ".join(commands))
+    else:
+        print("MOVE 0 15 10")
 
     # Write an action using print
     # To debug: print("Debug messages...", file=sys.stderr, flush=True)
