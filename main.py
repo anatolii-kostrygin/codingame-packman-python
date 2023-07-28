@@ -1,37 +1,57 @@
 import sys
 import math
+from pathlib import Path
+
+
+def input_echo():
+    s = input()
+    print(s, file=sys.stderr, flush=True)
+    return s
+
+
+def read_from(f):
+    scenario_file = open(Path(__file__).parent / "data" / "scenario.txt", "r")
+
+    def wrapper():
+        return scenario_file.readline().rstrip("\n")
+
+    return wrapper
+
+
+@read_from
+def input_from_file():
+    pass
 
 
 class Pac:
-    def __init__(self, read_f):
-        inputs = read_f().split()
-        self.pac_id = int(inputs[0])  # pac number (unique within a team)
-        self.is_mine = inputs[1] != "0"  # true if this pac is yours
-        self.x = int(inputs[2])  # position in the grid
-        self.y = int(inputs[3])  # position in the grid
-        self.type_id = inputs[4]  # unused in wood leagues
-        self.speed_turns_left = int(inputs[5])  # unused in wood leagues
-        self.ability_cooldown = int(inputs[6])  # unused in wood leagues
+    def __init__(self):
+        tokens = INPUT_METHOD().split()
+        self.pac_id = int(tokens[0])  # unique within a team
+        self.is_mine = tokens[1] != "0"  # True if this pac is yours
+        self.x = int(tokens[2])
+        self.y = int(tokens[3])
+        self.type_id = tokens[4]  # "ROCK", "PAPER", "SCISSORS"
+        self.speed_turns_left = int(tokens[5])
+        self.ability_cooldown = int(tokens[6])
 
 
 class Map:
-    def __init__(self, read_f):
-        self.width, self.height = [int(i) for i in read_f().split()]
+    def __init__(self):
+        self.width, self.height = [int(i) for i in INPUT_METHOD().split()]
         self.cells = [[0 for _ in range(self.height)] for _ in range(self.width)]
         self.my_pacs = []
         self.opp_pacs = []
         for y in range(self.height):
-            for x, ch in enumerate(read_f()):
+            for x, ch in enumerate(INPUT_METHOD()):
                 self.cells[x][y] = 0 if ch == " " else -1
 
-    def update(self, read_f):
+    def update(self):
         # reset and read pacs
         self.my_pacs = []
         self.opp_pacs = []
-        n_visible_pacs = int(read_f())  # all your pacs and enemy pacs in sight
+        n_visible_pacs = int(INPUT_METHOD())
         for i in range(n_visible_pacs):
-            pac = Pac(read_f)
-            if pac.is_mine:
+            if (pac := Pac()).is_mine:
                 self.my_pacs.append(pac)
             else:
                 self.opp_pacs.append(pac)
@@ -40,9 +60,9 @@ class Map:
             for y in range(self.height):
                 if self.cells[x][y] > 0:
                     self.cells[x][y] = 0
-        n_visible_pellets = int(read_f())
+        n_visible_pellets = int(INPUT_METHOD())
         for i in range(n_visible_pellets):
-            x, y, value = [int(j) for j in read_f().split()]
+            x, y, value = [int(j) for j in INPUT_METHOD().split()]
             self.cells[x][y] = value
 
     def find_closest_target(self, pac_x, pac_y, min_pellets):
@@ -61,11 +81,15 @@ def m_dist(x1, y1, x2, y2):
     return abs(x2 - x1) + abs(y2 - y1)
 
 
-map = Map(input)
-# game loop
+# INPUT_METHOD = input
+# INPUT_METHOD = input_echo
+INPUT_METHOD = input_from_file
+
+
+map = Map()
 while True:
-    my_score, opponent_score = [int(i) for i in input().split()]
-    map.update(input)
+    my_score, opponent_score = [int(i) for i in INPUT_METHOD().split()]
+    map.update()
 
     commands = []
     for pac in map.my_pacs:
@@ -79,6 +103,3 @@ while True:
         print(" | ".join(commands))
     else:
         print("MOVE 0 15 10")
-
-    # Write an action using print
-    # To debug: print("Debug messages...", file=sys.stderr, flush=True)
